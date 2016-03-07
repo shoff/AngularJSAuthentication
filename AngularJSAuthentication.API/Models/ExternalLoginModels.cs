@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Web;
-
-namespace AngularJSAuthentication.API.Models
+﻿namespace AngularJSAuthentication.API.Models
 {
+    using System.ComponentModel.DataAnnotations;
+
     public class ExternalLoginViewModel
     {
         public string Name { get; set; }
@@ -20,12 +16,11 @@ namespace AngularJSAuthentication.API.Models
         [Required]
         public string UserName { get; set; }
 
-         [Required]
+        [Required]
         public string Provider { get; set; }
 
-         [Required]
-         public string ExternalAccessToken { get; set; }
-
+        [Required]
+        public string ExternalAccessToken { get; set; }
     }
 
     public class ParsedExternalAccessToken

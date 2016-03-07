@@ -1,36 +1,34 @@
-﻿using AngularJSAuthentication.API.Models;
-using AngularJSAuthentication.API.Results;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.EntityFramework;
-using Microsoft.AspNet.Identity.Owin;
-using Microsoft.Owin.Security;
-using Microsoft.Owin.Security.OAuth;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using System.Web;
-using System.Web.Http;
-
-namespace AngularJSAuthentication.API.Controllers
+﻿namespace AngularJSAuthentication.API.Controllers
 {
+    using System;
+    using System.Linq;
+    using System.Net.Http;
+    using System.Security.Claims;
+    using System.Threading.Tasks;
+    using System.Web.Http;
+    using Microsoft.AspNet.Identity;
+    using Microsoft.AspNet.Identity.EntityFramework;
+    using Microsoft.AspNet.Identity.Owin;
+    using Microsoft.Owin.Security;
+    using Microsoft.Owin.Security.OAuth;
+    using Models;
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
+    using Results;
+
     [RoutePrefix("api/Account")]
     public class AccountController : ApiController
     {
-        private AuthRepository _repo = null;
-
-        private IAuthenticationManager Authentication
-        {
-            get { return Request.GetOwinContext().Authentication; }
-        }
+        private readonly AuthRepository _repo;
 
         public AccountController()
         {
             _repo = new AuthRepository();
+        }
+
+        private IAuthenticationManager Authentication
+        {
+            get { return Request.GetOwinContext().Authentication; }
         }
 
         // POST api/Account/Register
@@ -38,21 +36,21 @@ namespace AngularJSAuthentication.API.Controllers
         [Route("Register")]
         public async Task<IHttpActionResult> Register(UserModel userModel)
         {
-             if (!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-             IdentityResult result = await _repo.RegisterUser(userModel);
+            IdentityResult result = await _repo.RegisterUser(userModel);
 
-             IHttpActionResult errorResult = GetErrorResult(result);
+            IHttpActionResult errorResult = GetErrorResult(result);
 
-             if (errorResult != null)
-             {
-                 return errorResult;
-             }
+            if (errorResult != null)
+            {
+                return errorResult;
+            }
 
-             return Ok();
+            return Ok();
         }
 
         // GET api/Account/ExternalLogin
@@ -99,14 +97,13 @@ namespace AngularJSAuthentication.API.Controllers
             bool hasRegistered = user != null;
 
             redirectUri = string.Format("{0}#external_access_token={1}&provider={2}&haslocalaccount={3}&external_user_name={4}",
-                                            redirectUri,
-                                            externalLogin.ExternalAccessToken,
-                                            externalLogin.LoginProvider,
-                                            hasRegistered.ToString(),
-                                            externalLogin.UserName);
+                redirectUri,
+                externalLogin.ExternalAccessToken,
+                externalLogin.LoginProvider,
+                hasRegistered,
+                externalLogin.UserName);
 
             return Redirect(redirectUri);
-
         }
 
         // POST api/Account/RegisterExternal
@@ -114,7 +111,6 @@ namespace AngularJSAuthentication.API.Controllers
         [Route("RegisterExternal")]
         public async Task<IHttpActionResult> RegisterExternal(RegisterExternalBindingModel model)
         {
-
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -135,7 +131,7 @@ namespace AngularJSAuthentication.API.Controllers
                 return BadRequest("External user is already registered");
             }
 
-            user = new IdentityUser() { UserName = model.UserName };
+            user = new IdentityUser {UserName = model.UserName};
 
             IdentityResult result = await _repo.CreateAsync(user);
             if (!result.Succeeded)
@@ -143,7 +139,7 @@ namespace AngularJSAuthentication.API.Controllers
                 return GetErrorResult(result);
             }
 
-            var info = new ExternalLoginInfo()
+            var info = new ExternalLoginInfo
             {
                 DefaultUserName = model.UserName,
                 Login = new UserLoginInfo(model.Provider, verifiedAccessToken.user_id)
@@ -166,7 +162,6 @@ namespace AngularJSAuthentication.API.Controllers
         [Route("ObtainLocalAccessToken")]
         public async Task<IHttpActionResult> ObtainLocalAccessToken(string provider, string externalAccessToken)
         {
-
             if (string.IsNullOrWhiteSpace(provider) || string.IsNullOrWhiteSpace(externalAccessToken))
             {
                 return BadRequest("Provider or external access token is not sent");
@@ -191,7 +186,6 @@ namespace AngularJSAuthentication.API.Controllers
             var accessTokenResponse = GenerateLocalAccessTokenResponse(user.UserName);
 
             return Ok(accessTokenResponse);
-
         }
 
         protected override void Dispose(bool disposing)
@@ -203,8 +197,6 @@ namespace AngularJSAuthentication.API.Controllers
 
             base.Dispose(disposing);
         }
-
-        #region Helpers
 
         private IHttpActionResult GetErrorResult(IdentityResult result)
         {
@@ -237,7 +229,6 @@ namespace AngularJSAuthentication.API.Controllers
 
         private string ValidateClientAndRedirectUri(HttpRequestMessage request, ref string redirectUriOutput)
         {
-
             Uri redirectUri;
 
             var redirectUriString = GetQueryString(Request, "redirect_uri");
@@ -276,18 +267,23 @@ namespace AngularJSAuthentication.API.Controllers
             redirectUriOutput = redirectUri.AbsoluteUri;
 
             return string.Empty;
-
         }
 
         private string GetQueryString(HttpRequestMessage request, string key)
         {
             var queryStrings = request.GetQueryNameValuePairs();
 
-            if (queryStrings == null) return null;
+            if (queryStrings == null)
+            {
+                return null;
+            }
 
             var match = queryStrings.FirstOrDefault(keyValue => string.Compare(keyValue.Key, key, true) == 0);
 
-            if (string.IsNullOrEmpty(match.Value)) return null;
+            if (string.IsNullOrEmpty(match.Value))
+            {
+                return null;
+            }
 
             return match.Value;
         }
@@ -303,7 +299,8 @@ namespace AngularJSAuthentication.API.Controllers
                 //You can get it from here: https://developers.facebook.com/tools/accesstoken/
                 //More about debug_tokn here: http://stackoverflow.com/questions/16641083/how-does-one-get-the-app-access-token-for-debug-token-inspection-on-facebook
                 var appToken = "xxxxxx";
-                verifyTokenEndPoint = string.Format("https://graph.facebook.com/debug_token?input_token={0}&access_token={1}", accessToken, appToken);
+                verifyTokenEndPoint = string.Format("https://graph.facebook.com/debug_token?input_token={0}&access_token={1}",
+                    accessToken, appToken);
             }
             else if (provider == "Google")
             {
@@ -322,7 +319,7 @@ namespace AngularJSAuthentication.API.Controllers
             {
                 var content = await response.Content.ReadAsStringAsync();
 
-                dynamic jObj = (JObject)Newtonsoft.Json.JsonConvert.DeserializeObject(content);
+                dynamic jObj = (JObject) JsonConvert.DeserializeObject(content);
 
                 parsedToken = new ParsedExternalAccessToken();
 
@@ -345,9 +342,7 @@ namespace AngularJSAuthentication.API.Controllers
                     {
                         return null;
                     }
-
                 }
-
             }
 
             return parsedToken;
@@ -355,7 +350,6 @@ namespace AngularJSAuthentication.API.Controllers
 
         private JObject GenerateLocalAccessTokenResponse(string userName)
         {
-
             var tokenExpiration = TimeSpan.FromDays(1);
 
             ClaimsIdentity identity = new ClaimsIdentity(OAuthDefaults.AuthenticationType);
@@ -363,10 +357,10 @@ namespace AngularJSAuthentication.API.Controllers
             identity.AddClaim(new Claim(ClaimTypes.Name, userName));
             identity.AddClaim(new Claim("role", "user"));
 
-            var props = new AuthenticationProperties()
+            var props = new AuthenticationProperties
             {
                 IssuedUtc = DateTime.UtcNow,
-                ExpiresUtc = DateTime.UtcNow.Add(tokenExpiration),
+                ExpiresUtc = DateTime.UtcNow.Add(tokenExpiration)
             };
 
             var ticket = new AuthenticationTicket(identity, props);
@@ -374,13 +368,13 @@ namespace AngularJSAuthentication.API.Controllers
             var accessToken = Startup.OAuthBearerOptions.AccessTokenFormat.Protect(ticket);
 
             JObject tokenResponse = new JObject(
-                                        new JProperty("userName", userName),
-                                        new JProperty("access_token", accessToken),
-                                        new JProperty("token_type", "bearer"),
-                                        new JProperty("expires_in", tokenExpiration.TotalSeconds.ToString()),
-                                        new JProperty(".issued", ticket.Properties.IssuedUtc.ToString()),
-                                        new JProperty(".expires", ticket.Properties.ExpiresUtc.ToString())
-        );
+                new JProperty("userName", userName),
+                new JProperty("access_token", accessToken),
+                new JProperty("token_type", "bearer"),
+                new JProperty("expires_in", tokenExpiration.TotalSeconds.ToString()),
+                new JProperty(".issued", ticket.Properties.IssuedUtc.ToString()),
+                new JProperty(".expires", ticket.Properties.ExpiresUtc.ToString())
+                );
 
             return tokenResponse;
         }
@@ -401,7 +395,8 @@ namespace AngularJSAuthentication.API.Controllers
 
                 Claim providerKeyClaim = identity.FindFirst(ClaimTypes.NameIdentifier);
 
-                if (providerKeyClaim == null || String.IsNullOrEmpty(providerKeyClaim.Issuer) || String.IsNullOrEmpty(providerKeyClaim.Value))
+                if (providerKeyClaim == null || string.IsNullOrEmpty(providerKeyClaim.Issuer) ||
+                    string.IsNullOrEmpty(providerKeyClaim.Value))
                 {
                     return null;
                 }
@@ -416,11 +411,9 @@ namespace AngularJSAuthentication.API.Controllers
                     LoginProvider = providerKeyClaim.Issuer,
                     ProviderKey = providerKeyClaim.Value,
                     UserName = identity.FindFirstValue(ClaimTypes.Name),
-                    ExternalAccessToken = identity.FindFirstValue("ExternalAccessToken"),
+                    ExternalAccessToken = identity.FindFirstValue("ExternalAccessToken")
                 };
             }
         }
-
-        #endregion
     }
 }

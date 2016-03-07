@@ -1,25 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Web.Http;
-
-namespace AngularJSAuthentication.API.Controllers
+﻿namespace AngularJSAuthentication.API.Controllers
 {
+    using System.Threading.Tasks;
+    using System.Web.Http;
+
     [RoutePrefix("api/RefreshTokens")]
     public class RefreshTokensController : ApiController
     {
-
-        private AuthRepository _repo = null;
+        private readonly AuthRepository _repo;
 
         public RefreshTokensController()
         {
             _repo = new AuthRepository();
         }
 
-        [Authorize(Users="Admin")]
+        [Authorize(Users = "Admin")]
         [Route("")]
         public IHttpActionResult Get()
         {
@@ -37,7 +31,6 @@ namespace AngularJSAuthentication.API.Controllers
                 return Ok();
             }
             return BadRequest("Token Id does not exist");
-            
         }
 
         protected override void Dispose(bool disposing)

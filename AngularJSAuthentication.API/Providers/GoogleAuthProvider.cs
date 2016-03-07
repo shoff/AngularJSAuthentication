@@ -1,17 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using Microsoft.Owin;
-using Microsoft.Owin.Security.Facebook;
-using Microsoft.Owin.Security.Google;
-using Microsoft.Owin.Security.OAuth;
-using Owin;
-using System.Threading.Tasks;
-using System.Security.Claims;
-
-namespace AngularJSAuthentication.API.Providers
+﻿namespace AngularJSAuthentication.API.Providers
 {
+    using System.Security.Claims;
+    using System.Threading.Tasks;
+    using Microsoft.Owin.Security.Google;
+
     public class GoogleAuthProvider : IGoogleOAuth2AuthenticationProvider
     {
         public void ApplyRedirect(GoogleOAuth2ApplyRedirectContext context)
